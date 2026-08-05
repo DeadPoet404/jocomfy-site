@@ -13,8 +13,11 @@ import "@fontsource/patrick-hand/400.css";
 import "@fontsource/lilita-one/400.css";
 import "@fontsource/bubblegum-sans/400.css";
 import "@fontsource/comic-neue/400.css";
-import "@fontsource-variable/geist";
 import "./globals.css";
+import { Geist } from "next/font/google";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
   title: "Jocomfy International School",
@@ -28,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="font-sans">
+    <html lang="en" className={cn("font-sans", geist.variable)}>
       <body>{children}</body>
     </html>
   );
