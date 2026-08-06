@@ -13,7 +13,7 @@ export function AdmissionForm() {
     const data = Object.fromEntries(formData.entries());
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_SMS_API_URL || 'http://localhost:5000'}/api/admissions/applications/apply`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_SMS_API_URL || 'http://localhost:5000/api'}/admissions/applications/apply`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),

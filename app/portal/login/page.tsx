@@ -1,5 +1,7 @@
 "use client";
 import { motion } from "framer-motion";
+import { useState } from "react";
+import { useAuth } from "@/lib/auth-context";
 
 // Real Google G Logo - no library needed
 function GoogleIcon() {
@@ -14,6 +16,22 @@ function GoogleIcon() {
 }
 
 export default function PortalLoginPage() {
+  const { login } = useAuth();
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async () => {
+    setError("");
+    setLoading(true);
+    try {
+      // INT-002: Use dev-bypass credential matching seeded StudentAccount portalEmail
+      await login("dev:abena.darkwa@student.edu.gh");
+    } catch (err: any) {
+      setError(err.message || "Login failed");
+      setLoading(false);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-[#001f54] flex items-center justify-center p-6 relative overflow-hidden">
       <div className="absolute inset-0 opacity-5 pointer-events-none flex items-center justify-center">
@@ -35,12 +53,19 @@ export default function PortalLoginPage() {
           </p>
         </div>
 
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 text-xs font-bold rounded">
+            {error}
+          </div>
+        )}
+
         <button 
-           onClick={() => window.location.href = '/portal'}
-           className="w-full flex items-center justify-center gap-4 bg-[#001f54] text-white py-5 font-bold uppercase tracking-widest hover:bg-[#facc15] hover:text-[#001f54] transition-all group"
+           onClick={handleLogin}
+           disabled={loading}
+           className="w-full flex items-center justify-center gap-4 bg-[#001f54] text-white py-5 font-bold uppercase tracking-widest hover:bg-[#facc15] hover:text-[#001f54] transition-all group disabled:opacity-50"
         >
           <GoogleIcon />
-          Sign in with Google
+          {loading ? "Authenticating..." : "Sign in with Google"}
         </button>
 
         <div className="mt-12 pt-8 border-t border-gray-100 flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-gray-400">

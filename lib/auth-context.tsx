@@ -20,7 +20,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('portal_token', result.data.accessToken);
       localStorage.setItem('portal_user', JSON.stringify(result.data.user));
       setUser(result.data.user);
-      window.location.href = '/portal/dashboard';
+      window.location.href = '/portal';
     } else throw new Error(result.message || 'Login failed');
   };
   const logout = () => {
