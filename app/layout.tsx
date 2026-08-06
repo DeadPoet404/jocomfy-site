@@ -1,32 +1,18 @@
-import type { Metadata } from "next";
-import "@fontsource/dm-sans/400.css";
-import "@fontsource/dm-sans/500.css";
-import "@fontsource/dm-sans/600.css";
-import "@fontsource/dm-sans/700.css";
+import type { Metadata, Viewport } from "next";
 import "@fontsource/manrope/700.css";
 import "@fontsource/manrope/800.css";
 import "@fontsource/poppins/400.css";
 import "@fontsource/poppins/500.css";
-import "@fontsource/baloo-2/400.css";
-import "@fontsource/fredoka/400.css";
-import "@fontsource/patrick-hand/400.css";
-import "@fontsource/lilita-one/400.css";
-import "@fontsource/bubblegum-sans/400.css";
-import "@fontsource/comic-neue/400.css";
 import "@fontsource-variable/geist";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: "Jocomfy International School",
-  description:
-    "Jocomfy International School is a welcoming private K–12 school in Ghana.",
+export const viewport: Viewport = { themeColor: "#0d104c" };
+export const metadata: Metadata = { 
+  title: "Jocomfy International School", 
+  description: "Knowledge & Wisdom for every child." 
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="font-sans">
       <body>{children}</body>

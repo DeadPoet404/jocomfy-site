@@ -20,6 +20,7 @@ html {
 body {
   margin: 0;
   background: var(--jocomfy-white);
+  color: #111111;
 }
 
 * {
@@ -27,23 +28,13 @@ body {
 }
 
 @keyframes growth-left {
-  from {
-    transform: translateX(0);
-  }
-
-  to {
-    transform: translateX(-30%);
-  }
+  from { transform: translateX(0); }
+  to { transform: translateX(-30%); }
 }
 
 @keyframes growth-right {
-  from {
-    transform: translateX(-30%);
-  }
-
-  to {
-    transform: translateX(0);
-  }
+  from { transform: translateX(-30%); }
+  to { transform: translateX(0); }
 }
 
 .growth-marquee {
@@ -80,57 +71,27 @@ body {
   vertical-align: middle;
 }
 
-.growth-track-left {
-  animation: growth-left 28s linear infinite;
-}
+.growth-track-left { animation: growth-left 28s linear infinite; }
+.growth-track-right { color: #17186b; animation: growth-right 32s linear infinite; }
 
-.growth-track-right {
-  color: #17186b;
-  animation: growth-right 32s linear infinite;
-}
-
-.font-baloo {
-  font-family: "Baloo 2", sans-serif;
-}
-
-.font-fredoka {
-  font-family: "Fredoka", sans-serif;
-}
-
-.font-patrick {
-  font-family: "Patrick Hand", cursive;
-}
-
-.font-lilita {
-  font-family: "Lilita One", sans-serif;
-}
-
-.font-bubblegum {
-  font-family: "Bubblegum Sans", cursive;
-}
-
-.font-comic {
-  font-family: "Comic Neue", cursive;
-}
+.font-baloo { font-family: "Baloo 2", sans-serif; }
+.font-fredoka { font-family: "Fredoka", sans-serif; }
+.font-patrick { font-family: "Patrick Hand", cursive; }
+.font-lilita { font-family: "Lilita One", sans-serif; }
+.font-bubblegum { font-family: "Bubblegum Sans", cursive; }
+.font-comic { font-family: "Comic Neue", cursive; }
 
 @media (max-width: 760px) {
   .growth-track {
     gap: 28px;
     font-size: clamp(2rem, 9vw, 3.5rem);
   }
-
   .growth-track span::after {
     margin-left: 28px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-
-  .growth-track-left,
-  .growth-track-right {
-    animation: none;
-  }
+  html { scroll-behavior: auto; }
+  .growth-track-left, .growth-track-right { animation: none; }
 }
