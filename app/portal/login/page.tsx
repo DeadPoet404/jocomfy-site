@@ -77,7 +77,9 @@ export default function PortalLoginPage() {
     setError("");
     setLoading(true);
     try {
-      await login("dev:rolandhodavid@gmail.com");
+      // Dev credential is env-driven (NEXT_PUBLIC_DEV_LOGIN_EMAIL) — never hardcode
+      // real emails in the repo. Falls back to the SMS first-ACTIVE-account lookup.
+      await login(`dev:${process.env.NEXT_PUBLIC_DEV_LOGIN_EMAIL || "sandbox@example.invalid"}`);
     } catch (err: any) {
       setError(err.message || "Login failed");
       setLoading(false);
