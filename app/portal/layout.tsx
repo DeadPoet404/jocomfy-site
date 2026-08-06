@@ -10,6 +10,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
   const navLinks = [
     { href: "/portal", icon: <LayoutDashboard size={20} />, label: "Overview" },
+    { href: "/portal/academics", icon: <GraduationCap size={20} />, label: "Academics" },
     { href: "/portal/finance", icon: <Wallet size={20} />, label: "Finance" },
   ];
 

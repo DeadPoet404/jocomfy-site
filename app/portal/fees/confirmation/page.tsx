@@ -27,7 +27,7 @@ function ConfirmationContent() {
           </div>
         ) : <div className="text-gray-400">Verifying Transaction...</div>}
       </div>
-      <Link href="/portal/dashboard" className="block text-blue-600 underline">Return to Dashboard</Link>
+      <Link href="/portal/finance" className="block text-blue-600 underline">Return to Finance</Link>
     </div>
   );
 }

@@ -18,13 +18,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const result = await res.json();
     if (result.success) {
       localStorage.setItem('portal_token', result.data.accessToken);
+      if (result.data.refreshToken) localStorage.setItem('portal_refresh', result.data.refreshToken); // INT-005b
       localStorage.setItem('portal_user', JSON.stringify(result.data.user));
       setUser(result.data.user);
       window.location.href = '/portal';
     } else throw new Error(result.message || 'Login failed');
   };
   const logout = () => {
-    localStorage.removeItem('portal_token'); localStorage.removeItem('portal_user');
+    localStorage.removeItem('portal_token'); localStorage.removeItem('portal_refresh'); localStorage.removeItem('portal_user');
     setUser(null); window.location.href = '/portal/login';
   };
   return <AuthContext.Provider value={{ user, login, logout, isLoading }}>{children}</AuthContext.Provider>;

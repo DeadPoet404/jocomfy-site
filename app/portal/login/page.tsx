@@ -1,6 +1,6 @@
 "use client";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/auth-context";
 
 // Real Google G Logo - no library needed
@@ -18,14 +18,66 @@ function GoogleIcon() {
 export default function PortalLoginPage() {
   const { login } = useAuth();
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async () => {
+  // INT-008b: Google Identity Services is INITIALIZED invisibly; Google's own
+  // button is NOT rendered. Our custom-styled button (original design) raises
+  // the Google account chooser (One Tap) via prompt(). Falls back to the dev
+  // credential when GIS is not configured (NEXT_PUBLIC_GOOGLE_CLIENT_ID empty).
+  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
+  const gisReady = useRef(false);
+
+  const handleGoogleCredential = async (response: any) => {
     setError("");
     setLoading(true);
     try {
-      // INT-002: Use dev-bypass credential matching seeded StudentAccount portalEmail
-      await login("dev:abena.darkwa@student.edu.gh");
+      await login(response.credential); // the ID token — exactly what POST /api/auth/google expects
+    } catch (err: any) {
+      setError(err.message || "Login failed");
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!googleClientId) return;
+    const script = document.createElement("script");
+    script.src = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      const g = (window as any).google;
+      if (!g?.accounts?.id) return;
+      g.accounts.id.initialize({ client_id: googleClientId, callback: handleGoogleCredential });
+      gisReady.current = true;
+    };
+    document.head.appendChild(script);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [googleClientId]);
+
+  // Primary button: original design. Real Google flow when configured.
+  const handleLogin = async () => {
+    setError("");
+    setNotice("");
+    const g = (window as any).google;
+    if (googleClientId && gisReady.current && g?.accounts?.id) {
+      g.accounts.id.prompt((n: any) => {
+        if (n.isNotDisplayed() || n.isSkippedMoment()) {
+          setNotice("Google's account chooser didn't appear (popup blocked or One Tap cooldown). Try again shortly, or use Dev Sign-In below.");
+        }
+      });
+      return;
+    }
+    await handleDevLogin(); // no GIS configured → dev path behaves exactly like the old button
+  };
+
+  // INT-002/INT-008: dev bypass. portalEmail was rebound to the operator's real
+  // Gmail in INT-008 (psql) — this stays deterministic on the same student.
+  const handleDevLogin = async () => {
+    setError("");
+    setLoading(true);
+    try {
+      await login("dev:rolandhodavid@gmail.com");
     } catch (err: any) {
       setError(err.message || "Login failed");
       setLoading(false);
@@ -58,6 +110,11 @@ export default function PortalLoginPage() {
             {error}
           </div>
         )}
+        {notice && (
+          <div className="mb-4 p-3 bg-amber-50 border border-amber-300 text-amber-700 text-xs font-bold rounded">
+            {notice}
+          </div>
+        )}
 
         <button 
            onClick={handleLogin}
@@ -67,6 +124,18 @@ export default function PortalLoginPage() {
           <GoogleIcon />
           {loading ? "Authenticating..." : "Sign in with Google"}
         </button>
+
+        {googleClientId && (
+          <div className="mt-6 text-center">
+            <button
+              onClick={handleDevLogin}
+              disabled={loading}
+              className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-[#001f54] underline decoration-dotted underline-offset-4 disabled:opacity-50"
+            >
+              Dev Sign-In (sandbox)
+            </button>
+          </div>
+        )}
 
         <div className="mt-12 pt-8 border-t border-gray-100 flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-gray-400">
           <span>JOCOMFY OS v1.0</span>

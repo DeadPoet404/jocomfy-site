@@ -7,6 +7,7 @@ import { apiFetch } from "@/lib/api-client";
 export default function DashboardPage() {
   const [profile, setProfile] = useState<any>(null);
   const [fees, setFees] = useState<any>(null);
+  const [schedule, setSchedule] = useState<any>(null); // INT-006: GET /api/timetable/me payload
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -25,9 +26,10 @@ export default function DashboardPage() {
   useEffect(() => {
     Promise.all([
       apiFetch("/students/me"),
-      apiFetch("/payments/fees/me").catch(() => ({ data: null }))
+      apiFetch("/payments/fees/me").catch(() => ({ data: null })),
+      apiFetch("/timetable/me").catch(() => ({ success: false })) // INT-006: 404/network → empty state, never crashes the dashboard
     ])
-      .then(([pRes, fRes]) => {
+      .then(([pRes, fRes, tRes]) => {
         if (pRes && pRes.success) {
           setProfile(pRes.data);
         } else {
@@ -35,6 +37,10 @@ export default function DashboardPage() {
         }
         if (fRes && fRes.data) {
           setFees(fRes.data);
+        }
+        // INT-006: 200-with-null timetable AND 404 both leave schedule null → empty state
+        if (tRes && tRes.success && tRes.data) {
+          setSchedule(tRes.data);
         }
         setLoading(false);
       })
@@ -62,12 +68,26 @@ export default function DashboardPage() {
 
   const studentName = profile.studentName || "STUDENT";
   const studentCode = profile.studentId || "S000";
-  const status = profile.status || "ACTIVE";
-  const boardingStatus = profile.placement?.boardingStatus || "Day Student";
+const status = profile.status || "ACTIVE";
+const gpa = typeof profile.currentGpa === "number" ? profile.currentGpa.toFixed(2) : "—";
+const attendance = typeof profile.attendanceRate === "number" ? `${profile.attendanceRate}%` : "—";
+const boardingStatus = (profile.placement?.boardingStatus || "Day Student").replace(/_/g, " ");
   const academicTrack = profile.placement?.academicTrack || profile.placement?.className || "General Track";
-  const guardianName = profile.guardian?.name || "Primary Guardian";
-  const guardianPhone = profile.guardian?.phone || "—";
-  const balance = fees?.balance?.currentBalance !== undefined ? `GHS ${Number(fees.balance.currentBalance).toFixed(2)}` : "GHS 0.00";
+const primaryGuardian = Array.isArray(profile.guardians) && profile.guardians.length > 0 ? profile.guardians[0] : null;
+const guardianName = primaryGuardian?.name || "Primary Guardian";
+const guardianPhone = primaryGuardian?.phone || "—";
+const guardianRelationship = primaryGuardian?.relationship ? primaryGuardian.relationship.replace(/_/g, " ") : "Guardian";
+const balance = typeof fees?.balance === "number" ? `GHS ${fees.balance.toFixed(2)}` : "GHS 0.00";
+  // ── INT-006 live schedule derivation ──
+  const tt: any = schedule?.timetable || null;
+  const classLabel: string = schedule?.class?.name || profile.placement?.class?.name || "";
+  const DAYS: Record<string, string> = { MONDAY: "Mon", TUESDAY: "Tue", WEDNESDAY: "Wed", THURSDAY: "Thu", FRIDAY: "Fri" };
+  const schedRows: any[] = tt
+    ? [
+        ...((tt.periods || []).map((pp: any) => ({ time: `${pp.startTime} - ${pp.endTime}`, label: `Period ${pp.periodNumber}`, kind: "period" }))),
+        ...((tt.breaks || []).map((bb: any) => ({ time: `${bb.startTime} - ${bb.endTime}`, label: bb.name, kind: "break" }))),
+      ].sort((a: any, b: any) => a.time.localeCompare(b.time))
+    : [];
 
   return (
     <div className="max-w-7xl mx-auto space-y-8">
@@ -98,8 +118,8 @@ export default function DashboardPage() {
         {/* GPA Card */}
         <div className="bg-[#facc15] p-6 text-[#001f54] relative group shadow-[4px_4px_0px_0px_#001f54]">
           <h4 className="text-[10px] font-black uppercase tracking-widest mb-4 opacity-60">Academic Performance</h4>
-          <span className="text-5xl font-black tracking-tighter">3.85</span>
-          <p className="text-[10px] font-bold mt-2 uppercase">Verified Record</p>
+<span className="text-5xl font-black tracking-tighter">{gpa}</span>
+<p className="text-[10px] font-bold mt-2 uppercase">Attendance {attendance}</p>
         </div>
 
         {/* Current Fee Balance Card */}
@@ -120,7 +140,7 @@ export default function DashboardPage() {
 
         {/* Guardian Quick Contact */}
         <div className="bg-[#f5eee2] p-6 text-[#001f54]">
-          <h4 className="text-[10px] font-black uppercase tracking-widest mb-4 text-[#001f54]/40">Primary Guardian</h4>
+<h4 className="text-[10px] font-black uppercase tracking-widest mb-4 text-[#001f54]/40 capitalize">{guardianRelationship}</h4>
           <span className="text-lg font-black uppercase tracking-tight">{guardianName}</span>
           <p className="text-[10px] font-bold mt-1 uppercase text-[#001f54]/60">{guardianPhone}</p>
         </div>
@@ -131,34 +151,52 @@ export default function DashboardPage() {
         <div className="bg-white border-2 border-[#001f54] p-6 md:p-8">
           <h3 className="font-black uppercase italic text-xl mb-6 flex justify-between items-center">
             Weekly Schedule
-            <CalendarDays className="text-[#facc15]" />
+<span className="flex items-center gap-3">
+              {classLabel && <span className="text-[10px] not-italic tracking-widest bg-[#001f54] text-white px-2 py-1">{classLabel}</span>}
+              <CalendarDays className="text-[#facc15]" />
+            </span>
           </h3>
           <div className="overflow-x-auto">
             <table className="w-full text-left min-w-[500px]">
-              <thead>
+<thead>
                 <tr className="border-b border-[#001f54]/10">
-                  <th className="py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Period</th>
-                  <th className="py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Subject</th>
-                  <th className="py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Room</th>
-                  <th className="py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Teacher</th>
+                  <th className="py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Time</th>
+                  <th className="py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Slot</th>
+                  <th className="py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Type</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#001f54]/5">
-                {[
-                  {time: "08:00 - 09:30", sub: "Mathematics", room: "Lab A", tea: "Mr. Boateng"},
-                  {time: "09:45 - 11:00", sub: "Integrated Science", room: "Studio 2", tea: "Dr. Vance"},
-                  {time: "11:00 - 11:30", sub: "Break", room: "Cafe", tea: "-"},
-                  {time: "11:35 - 13:00", sub: "English Literature", room: "Room 101", tea: "Mrs. Doe"},
-                ].map((row, i) => (
+{schedRows.length === 0 ? (
+                  <tr><td colSpan={3} className="py-8 text-center text-xs font-bold uppercase text-gray-400">
+                    Schedule not yet published{classLabel ? ` for ${classLabel}` : ""}.
+                  </td></tr>
+                ) : schedRows.map((row: any, i: number) => (
                   <tr key={i} className="hover:bg-slate-50 transition-colors group">
                     <td className="py-4 text-xs font-bold text-gray-500 tracking-tighter">{row.time}</td>
-                    <td className="py-4 text-sm font-black uppercase text-[#001f54] tracking-tight">{row.sub}</td>
-                    <td className="py-4 text-xs font-bold text-gray-400">{row.room}</td>
-                    <td className="py-4 text-xs font-black uppercase text-blue-600/60">{row.tea}</td>
+                    <td className="py-4 text-sm font-black uppercase text-[#001f54] tracking-tight">{row.label}</td>
+                    <td className={`py-4 text-xs font-black uppercase ${row.kind === "break" ? "text-amber-500" : "text-blue-600/60"}`}>
+                      {row.kind === "break" ? "Break" : "Class Period"}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            {tt && Array.isArray(tt.subjects) && tt.subjects.length > 0 && (
+              <div className="mt-8">
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4">Subject Roster — {classLabel}</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {tt.subjects.map((s: any, si: number) => (
+                    <div key={si} className="flex items-center justify-between bg-[#f5eee2] px-4 py-3">
+                      <div>
+                        <p className="text-xs font-black uppercase text-[#001f54]">{s.subjectName}</p>
+                        <p className="text-[10px] font-bold text-[#001f54]/50 uppercase">{s.teacherName}</p>
+                      </div>
+                      {s.dayOfWeek && <span className="text-[9px] font-black uppercase tracking-widest bg-[#001f54] text-white px-2 py-1">{DAYS[s.dayOfWeek] || s.dayOfWeek}</span>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
