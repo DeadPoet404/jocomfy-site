@@ -1,0 +1,29 @@
+{
+	admin off
+}
+
+(common_security) {
+	encode zstd gzip
+
+	header {
+		-Server
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(self)"
+	}
+}
+
+jocomfy.com {
+	import common_security
+	reverse_proxy website:3000
+}
+
+www.jocomfy.com {
+	redir https://jocomfy.com{uri} permanent
+}
+
+sms.jocomfy.com {
+	import common_security
+	reverse_proxy frontend:3000
+}

@@ -29,7 +29,31 @@ services:
     cpus: 1.0
     logging: *default-logging
 
+  caddy:
+    image: caddy:2.11.4-alpine
+    restart: unless-stopped
+    depends_on:
+      website:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - sms-net
+    mem_limit: 256m
+    cpus: 0.5
+    logging: *default-logging
+
 networks:
   sms-net:
     external: true
     name: ${SMS_DOCKER_NETWORK:-school-management-system_sms-net}
+
+volumes:
+  caddy_data:
+  caddy_config:
