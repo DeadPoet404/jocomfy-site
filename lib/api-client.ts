@@ -1,67 +1,86 @@
-const BASE_URL = process.env.NEXT_PUBLIC_SMS_API_URL || 'http://localhost:5000/api';
+const BASE_URL = process.env.NEXT_PUBLIC_SMS_API_URL || "/api";
 
-// INT-005b: the SMS access token lives 15 min; the refresh token (7d, rotating,
-// single-use) is held in localStorage and rotates through POST /auth/refresh.
-// refreshing is a module-level single-flight promise: a dashboard firing 3
-// concurrent 401s triggers exactly ONE refresh call; the others await it.
 let refreshing: Promise<boolean> | null = null;
 
-function tryRefresh(): Promise<boolean> {
-  if (!refreshing) {
-    refreshing = (async () => {
-      const rt = localStorage.getItem('portal_refresh');
-      if (!rt) return false;
-      try {
-        const res = await fetch(`${BASE_URL}/auth/refresh`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          // INT-005c: NO credentials here — the shared localhost cookie jar may hold
-          // a staff-console session; sending it lets that session hijack rotation.
-          body: JSON.stringify({ refreshToken: rt }),
-        });
-        const json = await res.json().catch(() => null);
-        if (res.ok && json?.success && json.data?.accessToken) {
-          localStorage.setItem('portal_token', json.data.accessToken);
-          if (json.data.refreshToken) localStorage.setItem('portal_refresh', json.data.refreshToken);
-          return true;
-        }
-        return false;
-      } catch {
-        return false;
-      } finally {
-        // release the single-flight after all awaiters have attached
-        setTimeout(() => { refreshing = null; }, 0);
-      }
-    })();
-  }
+async function tryRefresh(): Promise<boolean> {
+  if (refreshing) return refreshing;
+
+  refreshing = (async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({}),
+      });
+
+      return response.ok;
+    } catch {
+      return false;
+    } finally {
+      setTimeout(() => {
+        refreshing = null;
+      }, 0);
+    }
+  })();
+
   return refreshing;
 }
 
-export async function apiFetch(endpoint: string, options: RequestInit = {}) {
-  const doFetch = () => {
-    const token = localStorage.getItem('portal_token');
-    const headers = {
-      'Content-Type': 'application/json',
-      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-      ...options.headers,
-    };
-    return fetch(`${BASE_URL}${endpoint}`, { ...options, headers, credentials: 'include' });
-  };
+function requestHeaders(options: RequestInit): Headers {
+  const headers = new Headers(options.headers);
+  const isFormData =
+    typeof FormData !== "undefined" &&
+    options.body instanceof FormData;
 
-  let response = await doFetch();
+  if (!isFormData && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
 
-  // Any 401 (expired, invalidated, or tampered token) gets exactly one
-  // refresh-and-retry before we give up and force re-authentication.
-  if (response.status === 401 && !endpoint.startsWith('/auth/')) {
+  return headers;
+}
+
+export async function apiFetch(
+  endpoint: string,
+  options: RequestInit = {},
+) {
+  const path = endpoint.startsWith("/")
+    ? endpoint
+    : `/${endpoint}`;
+
+  const url = `${BASE_URL.replace(/\/$/, "")}${path}`;
+
+  const send = () =>
+    fetch(url, {
+      ...options,
+      headers: requestHeaders(options),
+      credentials: "include",
+    });
+
+  let response = await send();
+
+  if (
+    response.status === 401 &&
+    path !== "/auth/login" &&
+    path !== "/auth/refresh"
+  ) {
     if (await tryRefresh()) {
-      response = await doFetch();
+      response = await send();
     }
   }
 
-  if (response.status === 401) {
-    localStorage.removeItem('portal_token');
-    localStorage.removeItem('portal_refresh');
-    if (typeof window !== 'undefined') window.location.href = '/portal/login';
+  if (
+    response.status === 401 &&
+    typeof window !== "undefined"
+  ) {
+    window.dispatchEvent(
+      new Event("portal:unauthorized")
+    );
   }
-  return response.json();
+
+  return response.json().catch(() => ({
+    success: false,
+    message:
+      `The school server returned HTTP ${response.status}.`,
+  }));
 }
