@@ -45,6 +45,7 @@ services:
       - caddy_config:/config
     networks:
       - sms-net
+      - staging-net
     mem_limit: 256m
     cpus: 0.5
     logging: *default-logging
@@ -53,6 +54,10 @@ networks:
   sms-net:
     external: true
     name: ${SMS_DOCKER_NETWORK:-school-management-system_sms-net}
+
+  staging-net:
+    external: true
+    name: jocomfy-staging-net
 
 volumes:
   caddy_data:
