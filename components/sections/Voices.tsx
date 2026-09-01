@@ -79,7 +79,7 @@ export function Voices() {
 
                 <div className="relative">
                   <p className="text-xl md:text-2xl leading-relaxed text-[#001f54]/80 font-medium max-w-2xl">
-                    "{story.quote}"
+                    &ldquo;{story.quote}&rdquo;
                   </p>
                   
                   {/* Subtle divider line that grows */}

@@ -1,7 +1,7 @@
 "use client";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import { ArrowUpRight, GraduationCap, Users, CalendarDays, Download } from "lucide-react";
+import { CalendarDays, Download } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 
 export default function DashboardPage() {

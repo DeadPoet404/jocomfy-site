@@ -60,7 +60,7 @@ export function LifeAtJocomfy() {
             <span className="text-sm font-bold text-[#17186b]">04 — Community</span>
             <div>
               <h3 className="font-[Poppins] text-3xl font-bold text-[#17186b]">Library & Leadership</h3>
-              <p className="mt-2 max-w-sm text-sm leading-6 text-[#17186b]/70">Quiet corners for readers and bold stages for tomorrow's leaders.</p>
+              <p className="mt-2 max-w-sm text-sm leading-6 text-[#17186b]/70">Quiet corners for readers and bold stages for tomorrow’s leaders.</p>
             </div>
           </motion.div>
         </motion.div>

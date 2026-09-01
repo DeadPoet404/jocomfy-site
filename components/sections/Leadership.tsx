@@ -28,10 +28,10 @@ export function Leadership() {
         >
           <p className="text-sm font-bold tracking-widest text-[#ed4545]">A NOTE FROM OUR HEAD</p>
           <h2 className="mt-4 font-[Poppins] text-4xl font-black leading-none tracking-tight text-[#17186b] sm:text-5xl">
-            "We nurture <br/>kindness as much <br/>as knowledge."
+            “We nurture <br/>kindness as much <br/>as knowledge.”
           </h2>
           <p className="mt-6 max-w-md leading-7 text-[#17186b]/70">
-            At Jocomfy, every corridor, every classroom, and every playground is designed to make your child feel seen, heard, and inspired to lead. This is more than a school — it's a community that grows together.
+            At Jocomfy, every corridor, every classroom, and every playground is designed to make your child feel seen, heard, and inspired to lead. This is more than a school — it’s a community that grows together.
           </p>
           <p className="mt-8 font-bold text-[#17186b]">— Mrs. Jane Doe, Headteacher</p>
         </motion.div>

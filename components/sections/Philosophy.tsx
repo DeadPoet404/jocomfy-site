@@ -41,7 +41,7 @@ export function Philosophy() {
           >
             <div className="bg-[#facc15] p-12 text-[#001f54] relative z-10">
               <p className="text-2xl font-bold leading-relaxed">
-                "Education is not the filling of a pail, but the lighting of a fire. At JOCOMFY, we focus on the friction between curiosity and knowledge."
+                “Education is not the filling of a pail, but the lighting of a fire. At JOCOMFY, we focus on the friction between curiosity and knowledge.”
               </p>
               <div className="mt-8 flex items-center gap-4">
                 <div className="h-1 w-12 bg-[#001f54]"></div>
