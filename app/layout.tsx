@@ -6,17 +6,30 @@ import "@fontsource/poppins/500.css";
 import "@fontsource-variable/geist";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
+import { EnvironmentBanner } from "@/components/shared/EnvironmentBanner";
 
-export const viewport: Viewport = { themeColor: "#0d104c" };
-export const metadata: Metadata = { 
-  title: "Jocomfy International School", 
-  description: "Knowledge & Wisdom for every child." 
+export const viewport: Viewport = {
+  themeColor: "#0d104c",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export const metadata: Metadata = {
+  title: "Jocomfy International School",
+  description: "Knowledge & Wisdom for every child.",
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en" className="font-sans">
-      <body><AuthProvider>{children}</AuthProvider></body>
+      <body>
+        <AuthProvider>
+          {children}
+          <EnvironmentBanner />
+        </AuthProvider>
+      </body>
     </html>
   );
 }
