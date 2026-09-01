@@ -3,6 +3,7 @@
 import {
   GraduationCap,
   Home,
+  KeyRound,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -37,6 +38,11 @@ const navLinks = [
     icon: Wallet,
     label: "Finance",
   },
+  {
+    href: "/portal/password",
+    icon: KeyRound,
+    label: "Password",
+  },
 ];
 
 export default function PortalLayout({
@@ -52,6 +58,9 @@ export default function PortalLayout({
   const isLoginPage =
     pathname === "/portal/login";
 
+  const isPasswordPage =
+    pathname === "/portal/password";
+
   useEffect(() => {
     if (
       !isLoginPage &&
@@ -59,10 +68,20 @@ export default function PortalLayout({
       !user
     ) {
       router.replace("/portal/login");
+      return;
+    }
+
+    if (
+      !isLoading &&
+      user?.mustChangePassword &&
+      !isPasswordPage
+    ) {
+      router.replace("/portal/password");
     }
   }, [
     isLoading,
     isLoginPage,
+    isPasswordPage,
     router,
     user,
   ]);
@@ -77,6 +96,24 @@ export default function PortalLayout({
         Verifying student session…
       </main>
     );
+  }
+
+  if (
+    user.mustChangePassword &&
+    !isPasswordPage
+  ) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#001f54] p-6 text-center text-sm font-black uppercase tracking-widest text-white">
+        Preparing secure password update…
+      </main>
+    );
+  }
+
+  if (
+    isPasswordPage &&
+    user.mustChangePassword
+  ) {
+    return <>{children}</>;
   }
 
   return (

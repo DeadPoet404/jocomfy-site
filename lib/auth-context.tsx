@@ -18,6 +18,7 @@ export interface PortalUser {
   role: string;
   entityType: string;
   entityInternalId: string;
+  mustChangePassword?: boolean;
 }
 
 interface AuthContextValue {

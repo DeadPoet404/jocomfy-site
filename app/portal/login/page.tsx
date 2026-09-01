@@ -27,7 +27,11 @@ export default function PortalLoginPage() {
 
   useEffect(() => {
     if (!isLoading && user) {
-      router.replace("/portal");
+      router.replace(
+        user.mustChangePassword
+          ? "/portal/password"
+          : "/portal",
+      );
     }
   }, [isLoading, router, user]);
 
@@ -39,8 +43,14 @@ export default function PortalLoginPage() {
     setSubmitting(true);
 
     try {
-      await login(email, password);
-      router.replace("/portal");
+      const authenticatedUser =
+        await login(email, password);
+
+      router.replace(
+        authenticatedUser.mustChangePassword
+          ? "/portal/password"
+          : "/portal",
+      );
     } catch (caught) {
       setError(
         caught instanceof Error

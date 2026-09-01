@@ -120,6 +120,65 @@ describe("PortalLayout", () => {
     expect(mocks.replace).not.toHaveBeenCalled();
   });
 
+  it("redirects a forced-change student away from records", async () => {
+    mocks.useAuth.mockReturnValue({
+      isLoading: false,
+      logout: mocks.logout,
+      user: {
+        email: "student@example.com",
+        mustChangePassword: true,
+        role: "STUDENT",
+      },
+    });
+
+    render(
+      <PortalLayout>
+        <div>Private portal content</div>
+      </PortalLayout>,
+    );
+
+    expect(
+      screen.getByText(
+        "Preparing secure password update…",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("Private portal content"),
+    ).not.toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(mocks.replace).toHaveBeenCalledWith(
+        "/portal/password",
+      );
+    });
+  });
+
+  it("allows a forced-change student to open the password page", () => {
+    mocks.pathname.mockReturnValue(
+      "/portal/password",
+    );
+    mocks.useAuth.mockReturnValue({
+      isLoading: false,
+      logout: mocks.logout,
+      user: {
+        email: "student@example.com",
+        mustChangePassword: true,
+        role: "STUDENT",
+      },
+    });
+
+    render(
+      <PortalLayout>
+        <div>Secure password form</div>
+      </PortalLayout>,
+    );
+
+    expect(
+      screen.getByText("Secure password form"),
+    ).toBeInTheDocument();
+    expect(mocks.replace).not.toHaveBeenCalled();
+  });
+
   it("keeps the login route public", () => {
     mocks.pathname.mockReturnValue(
       "/portal/login",
