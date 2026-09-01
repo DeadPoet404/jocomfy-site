@@ -1,3 +1,9 @@
+export interface ApiEnvelope<T> {
+  success: boolean;
+  data?: T;
+  message?: string;
+}
+
 export interface StudentClass {
   id: string;
   name: string;
@@ -37,8 +43,78 @@ export interface StudentProfile {
   guardians: GuardianSummary[];
 }
 
+export type PaymentIntentStatus =
+  | "INITIALIZED"
+  | "PENDING"
+  | "SUCCEEDED"
+  | "FAILED"
+  | "CANCELLED"
+  | "EXPIRED";
+
+export interface FeeInvoice {
+  id: string;
+  invoiceNo: string;
+  description: string;
+  amount: number;
+  dueDate: string;
+  paidAmount: number;
+  status: "UNPAID" | "PARTIAL" | "PAID";
+  createdAt: string;
+}
+
+export interface FeePayment {
+  id: string;
+  receiptNumber: string;
+  amountPaid: number;
+  paymentMethod: string;
+  referenceNo: string;
+  allocationTarget: string;
+  dateProcessed: string;
+}
+
+export interface PaymentIntentSummary {
+  id: string;
+  reference: string;
+  status: PaymentIntentStatus;
+  amount: number;
+  createdAt: string;
+  authorizationUrl?: string | null;
+}
+
 export interface StudentFeesSummary {
+  student: {
+    id: string;
+    studentId: string;
+    studentName: string;
+  };
+
   balance: number;
+  invoices: FeeInvoice[];
+  payments: FeePayment[];
+  pendingIntent: PaymentIntentSummary | null;
+}
+
+export interface PaymentIntentInitialization {
+  id: string;
+  reference: string;
+  status: PaymentIntentStatus;
+  amount: number;
+  currency: string;
+  authorizationUrl?: string;
+  accessCode?: string;
+  resumed?: boolean;
+}
+
+export interface PaymentIntentStatusDetails {
+  id: string;
+  reference: string;
+  status: PaymentIntentStatus;
+  amount: number;
+  currency: string;
+  channel?: string | null;
+  paidAt?: string | null;
+  createdAt: string;
+  verificationTriggered: boolean;
 }
 
 export interface TimetablePeriod {

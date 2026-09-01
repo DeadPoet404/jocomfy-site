@@ -1,5 +1,13 @@
 "use client";
 import { apiFetch } from "@/lib/api-client";
+import type {
+  ApiEnvelope,
+  FeeInvoice,
+  FeePayment,
+  PaymentIntentInitialization,
+  PaymentIntentSummary,
+  StudentFeesSummary,
+} from "@/lib/portal-types";
 import { useAuth } from "@/lib/auth-context";
 import { useState, useEffect } from "react";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
@@ -9,7 +17,7 @@ const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString("en-GB", { day
 
 export default function FinancePage() {
   const { user } = useAuth();
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<StudentFeesSummary | null>(null);
   const [error, setError] = useState("");
   const [amount, setAmount] = useState("");
   const [paying, setPaying] = useState(false);
@@ -21,18 +29,18 @@ export default function FinancePage() {
       .then((res) => { if (res && res.success) setData(res.data); else setError(res?.message || "Failed to load fee records"); })
       .catch(() => setError("Failed to connect to school server"));
   }, []);
-  useEffect(() => { if (user?.email) setPayer((prev) => prev || user.email); }, [user]);
 
   if (error) return <div className="max-w-6xl mx-auto p-10 text-red-600 font-bold uppercase text-sm">{error}</div>;
   if (!data) return <div className="max-w-6xl mx-auto p-10 font-black uppercase tracking-widest text-sm text-[#001f54]">Loading Financial Records...</div>;
 
   // INT-004: SMS returns `balance` as a BARE NUMBER; invoices/payments are live arrays.
   const balance = typeof data.balance === "number" ? data.balance : 0;
-  const invoices: any[] = Array.isArray(data.invoices) ? data.invoices : [];
-  const payments: any[] = Array.isArray(data.payments) ? data.payments : [];
-  const totalBilled = invoices.reduce((s: number, i: any) => s + Number(i.amount || 0), 0);
-  const totalPaid = payments.reduce((s: number, p: any) => s + Number(p.amountPaid || 0), 0);
-  const pending = data.pendingIntent || null;
+  const invoices: FeeInvoice[] = data.invoices;
+  const payments: FeePayment[] = data.payments;
+  const totalBilled = invoices.reduce((sum, invoice) => sum + invoice.amount, 0);
+  const totalPaid = payments.reduce((sum, payment) => sum + payment.amountPaid, 0);
+  const pending: PaymentIntentSummary | null = data.pendingIntent;
+  const pendingAuthorizationUrl = pending?.authorizationUrl ?? null;
   // INT-004 ROOT FIX: payerEmail comes from the authenticated session, not a nonexistent data.profile
   const payerEmail = payer.trim() || user?.email || "";
 
@@ -44,7 +52,7 @@ export default function FinancePage() {
     if (!/^[^@\s]+@[^@\s]+\.[a-zA-Z]{2,}$/.test(payerEmail)) { setPayError("Enter a valid payer email — the Paystack receipt is sent there. Seeded .local addresses are rejected by the gateway."); return; }
     setPaying(true);
     try {
-      const res = await apiFetch("/payments/intents/me", { method: "POST", body: JSON.stringify({ payerEmail, amount: amt }) });
+      const res = await apiFetch("/payments/intents/me", { method: "POST", body: JSON.stringify({ payerEmail, amount: amt }) }) as ApiEnvelope<PaymentIntentInitialization>;
       if (res && res.success && res.data?.authorizationUrl) {
         window.location.href = res.data.authorizationUrl; // → Paystack checkout
       } else {
@@ -69,8 +77,8 @@ export default function FinancePage() {
                   Current Outstanding — {data.student?.studentName} ({data.student?.studentId})
                 </p>
             </div>
-            {pending ? (
-              <button onClick={() => { window.location.href = pending.authorizationUrl; }}
+            {pending && pendingAuthorizationUrl ? (
+              <button onClick={() => { window.location.href = pendingAuthorizationUrl; }}
                 className="bg-[#facc15] text-[#001f54] p-6 text-left hover:bg-white transition-colors">
                 <p className="text-[10px] font-black uppercase tracking-widest mb-1 opacity-60">Pending Checkout</p>
                 <p className="text-xl font-black tracking-tighter">{fmt(Number(pending.amount))} →</p>
@@ -122,7 +130,7 @@ export default function FinancePage() {
 
                     <div className="group relative">
                         <label className="text-[10px] font-black uppercase tracking-[0.3em] block mb-2 text-gray-400 group-focus-within:text-[#facc15] transition-colors">Payer Email — receipt goes here</label>
-                        <input type="email" value={payer} onChange={(e) => setPayer(e.target.value)}
+                        <input type="email" value={payer || user?.email || ""} onChange={(e) => setPayer(e.target.value)}
                           className="w-full bg-transparent border-b-2 border-[#001f54]/30 py-2 text-lg font-bold outline-none focus:border-[#facc15] transition-all"
                           placeholder="parent@example.com" />
                     </div>
@@ -156,7 +164,7 @@ export default function FinancePage() {
                 <h3 className="text-sm font-black uppercase mb-6 tracking-widest text-gray-400">Invoice History</h3>
                 <div className="space-y-4">
                     {invoices.length === 0 && <p className="text-xs font-bold uppercase text-gray-400 p-6 bg-white border">No invoices on file.</p>}
-                    {invoices.map((inv: any) => (
+                    {invoices.map((inv) => (
                         <div key={inv.id} className="bg-white border border-gray-100 p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-[#001f54] transition-all group">
                             <div>
                                 <h5 className="font-black uppercase tracking-tight text-lg group-hover:text-blue-600 transition-colors">{inv.description}</h5>
@@ -179,7 +187,7 @@ export default function FinancePage() {
                 <h3 className="text-sm font-black uppercase mb-6 tracking-widest text-gray-400">Payment History</h3>
                 <div className="space-y-4">
                     {payments.length === 0 && <p className="text-xs font-bold uppercase text-gray-400 p-6 bg-white border">No payments recorded yet.</p>}
-                    {payments.map((p: any) => (
+                    {payments.map((p) => (
                         <div key={p.id} className="bg-white border border-gray-100 p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                             <div>
                                 <h5 className="font-black uppercase tracking-tight">{p.receiptNumber || p.referenceNo || "Payment"}</h5>
