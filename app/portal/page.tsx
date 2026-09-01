@@ -3,11 +3,21 @@ import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { CalendarDays, Download } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
+import type {
+  ScheduleRow,
+  StudentFeesSummary,
+  StudentProfile,
+  StudentTimetable,
+  StudentTimetableResponse,
+  SubjectAllocation,
+  TimetableBreak,
+  TimetablePeriod,
+} from "@/lib/portal-types";
 
 export default function DashboardPage() {
-  const [profile, setProfile] = useState<any>(null);
-  const [fees, setFees] = useState<any>(null);
-  const [schedule, setSchedule] = useState<any>(null); // INT-006: GET /api/timetable/me payload
+  const [profile, setProfile] = useState<StudentProfile | null>(null);
+  const [fees, setFees] = useState<StudentFeesSummary | null>(null);
+  const [schedule, setSchedule] = useState<StudentTimetableResponse | null>(null); // INT-006: GET /api/timetable/me payload
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -79,14 +89,14 @@ const guardianPhone = primaryGuardian?.phone || "—";
 const guardianRelationship = primaryGuardian?.relationship ? primaryGuardian.relationship.replace(/_/g, " ") : "Guardian";
 const balance = typeof fees?.balance === "number" ? `GHS ${fees.balance.toFixed(2)}` : "GHS 0.00";
   // ── INT-006 live schedule derivation ──
-  const tt: any = schedule?.timetable || null;
+  const tt: StudentTimetable | null = schedule?.timetable || null;
   const classLabel: string = schedule?.class?.name || profile.placement?.class?.name || "";
   const DAYS: Record<string, string> = { MONDAY: "Mon", TUESDAY: "Tue", WEDNESDAY: "Wed", THURSDAY: "Thu", FRIDAY: "Fri" };
-  const schedRows: any[] = tt
+  const schedRows: ScheduleRow[] = tt
     ? [
-        ...((tt.periods || []).map((pp: any) => ({ time: `${pp.startTime} - ${pp.endTime}`, label: `Period ${pp.periodNumber}`, kind: "period" }))),
-        ...((tt.breaks || []).map((bb: any) => ({ time: `${bb.startTime} - ${bb.endTime}`, label: bb.name, kind: "break" }))),
-      ].sort((a: any, b: any) => a.time.localeCompare(b.time))
+        ...((tt.periods || []).map((pp: TimetablePeriod): ScheduleRow => ({ time: `${pp.startTime} - ${pp.endTime}`, label: `Period ${pp.periodNumber}`, kind: "period" }))),
+        ...((tt.breaks || []).map((bb: TimetableBreak): ScheduleRow => ({ time: `${bb.startTime} - ${bb.endTime}`, label: bb.name, kind: "break" }))),
+      ].sort((a, b) => a.time.localeCompare(b.time))
     : [];
 
   return (
@@ -170,7 +180,7 @@ const balance = typeof fees?.balance === "number" ? `GHS ${fees.balance.toFixed(
                   <tr><td colSpan={3} className="py-8 text-center text-xs font-bold uppercase text-gray-400">
                     Schedule not yet published{classLabel ? ` for ${classLabel}` : ""}.
                   </td></tr>
-                ) : schedRows.map((row: any, i: number) => (
+                ) : schedRows.map((row: ScheduleRow, i: number) => (
                   <tr key={i} className="hover:bg-slate-50 transition-colors group">
                     <td className="py-4 text-xs font-bold text-gray-500 tracking-tighter">{row.time}</td>
                     <td className="py-4 text-sm font-black uppercase text-[#001f54] tracking-tight">{row.label}</td>
@@ -185,7 +195,7 @@ const balance = typeof fees?.balance === "number" ? `GHS ${fees.balance.toFixed(
               <div className="mt-8">
                 <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4">Subject Roster — {classLabel}</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {tt.subjects.map((s: any, si: number) => (
+                  {tt.subjects.map((s: SubjectAllocation, si: number) => (
                     <div key={si} className="flex items-center justify-between bg-[#f5eee2] px-4 py-3">
                       <div>
                         <p className="text-xs font-black uppercase text-[#001f54]">{s.subjectName}</p>
