@@ -82,3 +82,80 @@ export interface ScheduleRow {
   label: string;
   kind: "period" | "break";
 }
+
+export interface GradeRecord {
+  id: string;
+
+  subject: {
+    id: string;
+    name: string;
+    code: string;
+  } | null;
+
+  class: StudentClass | null;
+
+  term: {
+    id: string;
+    name: string;
+    academicYear: string;
+  } | null;
+
+  continuousAssessment: number;
+  examination: number;
+  finalScore: number;
+  letterGrade: string;
+  gradePoints: number;
+  creditHours: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StudentGradebook {
+  student: {
+    id: string;
+    publicStudentId: string;
+    studentName: string;
+  };
+
+  summary: {
+    recordCount: number;
+    totalCreditHours: number;
+    weightedGpa: number;
+    storedGpa: number;
+    termId: string | null;
+  };
+
+  records: GradeRecord[];
+}
+
+export type AttendanceStatus =
+  | "PRESENT"
+  | "ABSENT"
+  | "LATE"
+  | "EXCUSED";
+
+export interface AttendanceRecord {
+  id: string;
+  studentId: string;
+  date: string;
+  status: AttendanceStatus;
+  remarks?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AttendanceMetrics {
+  presentCount: number;
+  absentCount: number;
+  lateCount: number;
+  excusedCount: number;
+  totalCount: number;
+  rate: number;
+}
+
+export interface StudentAttendanceHistory {
+  studentId: string;
+  publicStudentId: string;
+  history: AttendanceRecord[];
+  metrics: AttendanceMetrics;
+}

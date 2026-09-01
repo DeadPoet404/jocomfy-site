@@ -1,5 +1,11 @@
 "use client";
 import { apiFetch } from "@/lib/api-client";
+import type {
+  AttendanceRecord,
+  GradeRecord,
+  StudentAttendanceHistory,
+  StudentGradebook,
+} from "@/lib/portal-types";
 import { useState, useEffect } from "react";
 import { GraduationCap, CalendarCheck, BookOpen } from "lucide-react";
 
@@ -18,8 +24,8 @@ const statusChip = (s: string) =>
      EXCUSED: "bg-blue-100 text-blue-700", ABSENT: "bg-red-100 text-red-700" } as Record<string, string>)[s] || "bg-gray-100 text-gray-500";
 
 export default function AcademicsPage() {
-  const [grades, setGrades] = useState<any>(null);
-  const [attendance, setAttendance] = useState<any>(null);
+  const [grades, setGrades] = useState<StudentGradebook | null>(null);
+  const [attendance, setAttendance] = useState<StudentAttendanceHistory | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -42,9 +48,9 @@ export default function AcademicsPage() {
 
   const student = grades?.student || null;
   const gSummary = grades?.summary || null;
-  const records: any[] = Array.isArray(grades?.records) ? grades.records : [];
+  const records: GradeRecord[] = grades?.records ?? [];
   const metrics = attendance?.metrics || null;
-  const history: any[] = Array.isArray(attendance?.history) ? attendance.history : [];
+  const history: AttendanceRecord[] = attendance?.history ?? [];
 
   // INT-009: every figure on this page traces to GET /api/grades/me or /api/attendance/me
   const attCards = metrics ? [
@@ -106,7 +112,7 @@ export default function AcademicsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#001f54]/5">
-                {records.map((r: any) => (
+                {records.map((r) => (
                   <tr key={r.id} className="hover:bg-slate-50 transition-colors">
                     <td className="py-4 pr-4">
                       <p className="text-sm font-black uppercase text-[#001f54] tracking-tight">{r.subject?.name}</p>
@@ -158,7 +164,7 @@ export default function AcademicsPage() {
             <p className="text-xs font-bold text-white/40 uppercase">No daily records.</p>
           ) : (
             <div className="space-y-4">
-              {history.slice(0, 10).map((h: any) => (
+              {history.slice(0, 10).map((h) => (
                 <div key={h.id} className="flex items-center justify-between border-l-2 border-[#facc15] pl-4">
                   <div>
                     <p className="text-xs font-black uppercase text-[#facc15]">{fmtDate(h.date)}</p>
