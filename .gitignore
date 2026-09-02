@@ -15,3 +15,7 @@ coverage/
 .vscode/
 .idea/
 *.tsbuildinfo
+
+# Editor/backup artifacts — never commit these
+*.bak
+*.bak-*

@@ -1,36 +1,74 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Jocomfy Website & Student Portal
 
-## Getting Started
+Public marketing site and authenticated student/parent portal for Jocomfy
+School. Next.js frontend; all data comes from the School Management System
+API — this application owns no database.
 
-First, run the development server:
+## Stack
+
+- Next.js 16 (App Router), React 19, TypeScript
+- Tailwind CSS v4
+- Vitest + Testing Library + jsdom
+- Docker + Caddy in production
+
+## Layout
+
+| Path | Purpose |
+| --- | --- |
+| `app/` | Routes: marketing pages, `/admissions`, `/portal/*` |
+| `components/sections/` | Marketing page sections |
+| `components/ui/` | Shared primitives |
+| `lib/api-client.ts` | Fetch wrapper with single-flight refresh-token retry |
+| `lib/auth-context.tsx` | Portal session context |
+| `lib/portal-types.ts` | Shared response types |
+| `tests/` | Vitest suites |
+
+## Development
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev            # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The portal expects the SMS backend to be reachable. Set
+`NEXT_PUBLIC_SMS_API_URL`, or leave it unset to use the `/api` rewrite.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+cp .env.example .env.local
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Checks
 
-## Learn More
+```bash
+npm run lint
+npm run typecheck
+npm run test:run
+```
 
-To learn more about Next.js, take a look at the following resources:
+All three run in CI on every push.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Production
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Built and served as a container behind Caddy, bound to loopback and fronted
+by Cloudflare. See `Dockerfile`, `docker-compose.yml`, and `Caddyfile`.
 
-## Deploy on Vercel
+Deployment follows the promotion path in the SMS repository's
+`docs/DEPLOY-RUNBOOK.md`: commit, push, CI green, staging, staging
+acceptance, then production.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Portal routes
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Route | Purpose |
+| --- | --- |
+| `/portal/login` | Student sign-in |
+| `/portal` | Dashboard |
+| `/portal/academics` | Grades and attendance |
+| `/portal/finance` | Invoices, balance, payment initiation |
+| `/portal/fees/confirmation` | Post-payment confirmation |
+| `/portal/password` | Password change (forced on first sign-in) |
+
+## Notes
+
+- Admissions is presentation-only. There is no application backend yet, so
+  `/admissions/apply` redirects to `/admissions`.
+- Payments are wired to Paystack in the API but not fully rolled out.
